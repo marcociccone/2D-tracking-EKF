@@ -3,10 +3,10 @@
 % trajectory file
 % beacons: matrix of dimensions n_beacons x 2 [x_1 y_1 ; ... ; x_n y_n]
 % radius: operative area of the beacons
-% sampling_time: how often we take the measurements from the beacons
 % motion_model: 'P' or 'PV'
 % measurement_model: 'euclidean' or 'rssi'
-%         
+% sampling_time: how often we take the measurements from the beacons
+% var_z: error variance of the beacons        
 %     
 
 function [prediction, dist_err, dist_max,  RMSE_x, RMSE_y, RMSE_net] = ekf_tracking(name_trajectory, ...
@@ -14,7 +14,8 @@ function [prediction, dist_err, dist_max,  RMSE_x, RMSE_y, RMSE_net] = ekf_track
                                                                         radius, ...
                                                                         motion_model, ...
                                                                         measurement_model, ...
-                                                                        sampling_time ...
+                                                                        sampling_time, ...
+                                                                        var_z...
                                                                        )
 %% load the trajectory
 file = load(name_trajectory);
@@ -92,7 +93,7 @@ elseif (strcmp(motion_model,'PV'))
     
     
     %% output covariance : each sensor has its own uncertainty and it's uncorrelated with the others
-    var_z = 0.1;
+    
     Ez = eye(p)*var_z;
     
 end
@@ -100,17 +101,21 @@ end
 P = Ex; % estimate of initial position variance (covariance matrix)
 prediction = x_hat';
 
-if (strcmp(measurement_model, 'rssi'))
+if (strcmp(measurement_model, 'euclidean'))    
+    noised_distances = zeros(size(beacons,1),N);
+elseif (strcmp(measurement_model, 'rssi'))
     %% parameters of the measurement model (taken from Peerapong et.Al)
     Pd_0 = 3.0; % RSSI value at 1m [dBm]
     R_0  = 1.0; % reference or breakpoint distance [m] 
     l = 3.0;    % path loss exponent
+    
+    radio_power = zeros(size(beacons,1),N);
+    noised_radio_power = zeros(size(beacons,1),N);
 end
 
 
 %% Kalman filter
 distances = zeros(size(beacons,1),N);
-noised_distances = zeros(size(beacons,1),N);
 for t=1:N
      for k=1:size(beacons,1)
          
@@ -123,11 +128,12 @@ for t=1:N
          if distances(k,t) > radius
              distances(k,t) = 0;
          else
-             noised_distances(k,t) = awgn(distances(k,t),10);
-
              if (strcmp(measurement_model, 'rssi'))
-                noised_radio_power(k,t) = awgn(radio_power(k,t),10);
+                noised_radio_power(k,t) = radio_power(k,t) + sqrt(var_z)*randn(1);
+             elseif (strcmp(measurement_model, 'euclidean'))
+                noised_distances(k,t) = distances(k,t) + sqrt(var_z)*randn(1);
              end
+             
          end
          
      end
