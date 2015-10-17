@@ -25,7 +25,7 @@ s = [7.5,3.5;   ...
     ];
 
 % define polling query of sensors
-dt = 5;
+dt = 1;
 % number of sensors
 p = size(s,1);
 % dimension of the states : 2D motion x,y

@@ -1,18 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%EKF tracking 2D with P model and euclidean distance measurements%
+%EKF tracking 2D with PV model and euclidean distance measurements%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all;
 close all;
 clc;
 %% load the trajectory
-%file = load('hard2.mat');
-file = load('easy2.mat');
+file = load('hard2.mat');
+%file = load('easy2.mat');
 X = file.X;
 %% normalization for a room of dimensions 30x10 m
 
 N = size(X,1);
 %% define the positions of the sensors
-radius = 6;% this is how far the sensor can work 
+radius = 7;% this is how far the sensor can work 
 s = [7.5,3.5;   ...
      15,5;      ...
      20,3.5;    ...
@@ -25,7 +25,7 @@ s = [7.5,3.5;   ...
     ];
 
 % define polling query of sensors
-dt = 5;
+dt = 1;
 % number of sensors
 p = size(s,1);
 % dimension of the states : 2D motion x,y
